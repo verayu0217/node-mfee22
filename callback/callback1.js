@@ -24,4 +24,3 @@ doWork("刷牙", 2000, (err, result) => {
     });
   });
 });
-console.log("123");
