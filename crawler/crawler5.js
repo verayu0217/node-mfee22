@@ -5,7 +5,6 @@ const mysql = require("mysql2");
 require("dotenv").config();
 
 (async () => {
-    
   let connection = mysql.createConnection({
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
@@ -44,10 +43,7 @@ require("dotenv").config();
     // Using prepared statements
     // to protect from SQL Injection attacks
     let saveNameResult = await connection.execute(
-      "INSERT IGNORE INTO stocks (id, name) VALUES (?, ?)",
-
-      //若要測試但重複主key可以使用 "INSERT IGNORE INTO stocks (id, name) VALUES (?, ?)",
-      
+      "INSERT INTO stocks (id, name) VALUES (?, ?)",
       [stockNo, stockName]
     );
     console.log(saveNameResult);
