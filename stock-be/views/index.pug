@@ -1,0 +1,8 @@
+extends _layouts/master
+
+block content
+  img(src="/images/001.JPG", alt="這是圖片")
+  #main
+    ul.list-style.color-green
+      each val in stocks
+        li.list-item 股票名稱 #{val}
