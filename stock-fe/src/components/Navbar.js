@@ -1,7 +1,13 @@
 import { Link, NavLink } from "react-router-dom";
 import Logo from "../img/fish.png";
+import axios from "axios";
+import { API_URL } from "../utils/config";
 
 const Navbar = () => {
+  const handleLogout = async () => {
+    await axios.get(`${API_URL}/auth/logout`, { withCredentials: true });
+  };
+
   return (
     <nav className="bg-indigo-100 px-10 py-3 flex justify-between items-center sticky shadow">
       <div className="flex items-center cursor-pointer">
@@ -28,6 +34,7 @@ const Navbar = () => {
         <img src="#" style={{ width: "80px" }} />
         <Link
           to="/about"
+          onClick={handleLogout}
           className="text-xl text-gray-700 text-opacity-70 mx-3 md:mx-6 hover:text-opacity-90"
         >
           登出

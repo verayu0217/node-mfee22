@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_URL } from "../utils/config";
 
 const StockDetails = () => {
   const [error, setError] = useState(null);
@@ -18,7 +19,7 @@ const StockDetails = () => {
   useEffect(() => {
     let getPrices = async () => {
       let response = await axios.get(
-        `http://localhost:3002/api/stock/${stockId}?page=${page}`
+        `${API_URL}/stock/${stockId}?page=${page}`
       );
       setData(response.data.data);
       setLastPage(response.data.pagination.lastPage);
