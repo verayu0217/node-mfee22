@@ -3,7 +3,6 @@ const express = require("express");
 require("dotenv").config();
 // path 是 nodejs 內建的 lib
 const path = require("path");
-const connection = require("./utils/db");
 const cors = require("cors");
 
 // 利用 express 這個 library 來建立一個 web app (express instance)
@@ -16,7 +15,31 @@ let app = express();
 // next: 往下一關走
 // res.xxx 結束這次的旅程 (req-res cycle)
 
-app.use(cors());
+app.use(
+  //為了要讓browser在CORS的情況下還是幫我們送cookie
+  cors({
+    origin: ["http://localhost:3000"],
+    credentials: true,
+  })
+);
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+//啟用session
+const expressSession = require("express-session");
+let FileStore = require("session-file-store")(expressSession);
+app.use(
+  expressSession({
+    store: new FileStore({
+      path: path.join(__dirname, "..", "sessions"),
+    }),
+    secret: process.env.SESSION_SECRET,
+    //每次請求發過來session資料沒改也重新存一次
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
 // 設定 express 要用的樣版引擎(template engine)
 // 設定視圖檔案要放在哪裡
@@ -82,56 +105,14 @@ app.get("/contact", (req, res, next) => {
   res.send("這是聯絡我們");
 });
 
-//建議加上api 符合RESTful API的列表
-app.get("/api/stocks", async (req, res, next) => {
-  let [data, fields] = await connection.execute("SELECT * FROM stocks");
+let stockRouter = require("./routers/stock");
+app.use("/api/stock", stockRouter);
 
-  console.log(data);
-  res.json(data);
-});
+let memberRouter = require("./routers/member");
+app.use("/api/member", memberRouter);
 
-app.get("/api/stock/:stockId", async (req, res, next) => {
-  //取得目前在第幾頁
-  //如果沒有設定req.query.page 那就設成1
-  let page = req.query.page || 1;
-  console.log("aaa", page);
-
-  //TODO:取得目前總筆數
-  let [total] = await connection.execute(
-    "SELECT COUNT(*) AS total FROM stock_prices WHERE stock_id=?",
-    [req.params.stockId]
-  );
-
-  console.log("bbb", total);
-  total = total[0].total;
-
-  //TODO:計算總共應該要有幾頁
-  //  決定一頁有幾筆
-  const perPage = 3;
-  const lastPage = Math.ceil(total / perPage);
-
-  //TODO: 計算SQL要用的offset
-  let offset = (page - 1) * perPage;
-
-  //TODO:取得資料
-  let [data] = await connection.execute(
-    "SELECT * FROM stock_prices WHERE stock_id=? ORDER BY date LIMIT ? OFFSET ?",
-    [req.params.stockId, perPage, offset]
-  );
-
-  //TODO:準備要response
-  res.json({
-    pagination: { total, perPage, page, lastPage },
-    data,
-  });
-
-  //   req, params.stockId;
-  //   let [data, fields] = await connection.execute(
-  //     "SELECT * FROM stock_prices WHERE stock_id=?",
-  //     [req.params.stockId]
-  //   );
-  //   res.json(data);
-});
+let authRouter = require("./routers/auth");
+app.use("/api/auth", authRouter);
 
 // 在所有路由中間件的後
 // 既然前面都比對不到，那表示這裡是 404
@@ -145,7 +126,7 @@ app.use((req, res, next) => {
 // 有四個參數，是用來「捕捉」錯誤的
 app.use((err, req, res, next) => {
   console.log("來自四個參數的錯誤處理中間件", err);
-  res.status(500).send("Server 錯誤: 請洽系統管理員");
+  res.status(500).send("Server 錯誤: 請洽系統管理員～～這裡是server.js");
 });
 
 const port = process.env.SERVER_PORT || 3000;
